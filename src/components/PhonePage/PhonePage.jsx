@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import Form from 'components/Form';
 import ContactsList from 'components/ContactsList';
 import Filter from 'components/Filter';
@@ -6,49 +6,31 @@ import { save, load } from 'localStorage/localStorage';
 
 const STORAGE_KEY = 'contacts';
 
-export default class PhonePage extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+const PhonePage = () => {
+  const [contacts, setContacts] = useState(load(STORAGE_KEY) ?? []);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
-    const getStorageKey = load(STORAGE_KEY);
+  useEffect(() => {
+    save(STORAGE_KEY, contacts);
+  }, [contacts]);
 
-    if (getStorageKey) {
-      this.setState({ contacts: getStorageKey });
-    }
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      save(STORAGE_KEY, this.state.contacts);
-    }
-  }
-
-  handleAddContact = contact => {
-    if (this.state.contacts.find(item => item.name === contact.name)) {
+  const handleAddContact = contact => {
+    if (contacts.find(item => item.name === contact.name)) {
       alert(`${contact.name} is already in contacts.`);
       return;
     }
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, contact],
-    }));
+    setContacts([...contacts, contact]);
   };
 
-  handleDelete = item => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== item),
-    }));
+  const handleDelete = item => {
+    setContacts(contacts.filter(contact => contact.id !== item));
   };
 
-  handleChangeFilter = e => {
-    this.setState({ filter: e.currentTarget.value });
+  const handleChangeFilter = e => {
+    setFilter(e.currentTarget.value);
   };
 
-  getVisisbleContacts = () => {
-    const { filter, contacts } = this.state;
-
+  const getVisisbleContacts = () => {
     const normalizedFilter = filter.toLowerCase();
 
     return contacts.filter(contact =>
@@ -56,21 +38,18 @@ export default class PhonePage extends Component {
     );
   };
 
-  render() {
-    const { filter } = this.state;
-    const { handleAddContact, handleDelete, handleChangeFilter } = this;
-    const visible = this.getVisisbleContacts();
+  const visible = getVisisbleContacts();
 
-    return (
-      <>
-        <h1>Phonebook</h1>
-        <Form handleAddContact={handleAddContact} />
+  return (
+    <>
+      <h1>Phonebook</h1>
+      <Form handleAddContact={handleAddContact} />
 
-        <h2>Contacts</h2>
-        
-        <Filter value={filter} onChange={handleChangeFilter} />
-        <ContactsList contacts={visible} handleDelete={handleDelete} />
-      </>
-    );
-  }
-}
+      <h2>Contacts</h2>
+
+      <Filter value={filter} onChange={handleChangeFilter} />
+      <ContactsList contacts={visible} handleDelete={handleDelete} />
+    </>
+  );
+};
+export default PhonePage;
